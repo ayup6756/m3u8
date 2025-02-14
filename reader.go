@@ -586,6 +586,7 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 		}
 		if state.cuetag.Cuetype != 0 {
 			p.Segments[p.last()].CueTag = state.cuetag
+			state.cuetag = CueTag{}
 		}
 	// start tag first
 	case line == "#EXTM3U":
