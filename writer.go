@@ -573,49 +573,49 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 		if p.winsize > 0 { // skip for VOD playlists, where winsize = 0
 			i++
 		}
-		if seg.SCTE != nil {
-			switch seg.SCTE.Syntax {
-			case SCTE35_67_2014:
-				p.buf.WriteString("#EXT-SCTE35:")
-				p.buf.WriteString("CUE=\"")
-				p.buf.WriteString(seg.SCTE.Cue)
-				p.buf.WriteRune('"')
-				if seg.SCTE.ID != "" {
-					p.buf.WriteString(",ID=\"")
-					p.buf.WriteString(seg.SCTE.ID)
-					p.buf.WriteRune('"')
-				}
-				if seg.SCTE.Time != 0 {
-					p.buf.WriteString(",TIME=")
-					p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
-				}
-				p.buf.WriteRune('\n')
-			case SCTE35_OATCLS:
-				switch seg.SCTE.CueType {
-				case SCTE35Cue_Start:
-					if seg.SCTE.Cue != "" {
-						p.buf.WriteString("#EXT-OATCLS-SCTE35:")
-						p.buf.WriteString(seg.SCTE.Cue)
-						p.buf.WriteRune('\n')
-					}
-					p.buf.WriteString("#EXT-X-CUE-OUT:")
-					p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
-					p.buf.WriteRune('\n')
-				case SCTE35Cue_Mid:
-					p.buf.WriteString("#EXT-X-CUE-OUT-CONT:")
-					p.buf.WriteString("ElapsedTime=")
-					p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Elapsed, 'f', -1, 64))
-					p.buf.WriteString(",Duration=")
-					p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
-					p.buf.WriteString(",SCTE35=")
-					p.buf.WriteString(seg.SCTE.Cue)
-					p.buf.WriteRune('\n')
-				case SCTE35Cue_End:
-					p.buf.WriteString("#EXT-X-CUE-IN")
-					p.buf.WriteRune('\n')
-				}
-			}
-		}
+		// if seg.SCTE != nil {
+		// 	switch seg.SCTE.Syntax {
+		// 	case SCTE35_67_2014:
+		// 		p.buf.WriteString("#EXT-SCTE35:")
+		// 		p.buf.WriteString("CUE=\"")
+		// 		p.buf.WriteString(seg.SCTE.Cue)
+		// 		p.buf.WriteRune('"')
+		// 		if seg.SCTE.ID != "" {
+		// 			p.buf.WriteString(",ID=\"")
+		// 			p.buf.WriteString(seg.SCTE.ID)
+		// 			p.buf.WriteRune('"')
+		// 		}
+		// 		if seg.SCTE.Time != 0 {
+		// 			p.buf.WriteString(",TIME=")
+		// 			p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
+		// 		}
+		// 		p.buf.WriteRune('\n')
+		// 	case SCTE35_OATCLS:
+		// 		switch seg.SCTE.CueType {
+		// 		case SCTE35Cue_Start:
+		// 			if seg.SCTE.Cue != "" {
+		// 				p.buf.WriteString("#EXT-OATCLS-SCTE35:")
+		// 				p.buf.WriteString(seg.SCTE.Cue)
+		// 				p.buf.WriteRune('\n')
+		// 			}
+		// 			p.buf.WriteString("#EXT-X-CUE-OUT:")
+		// 			p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
+		// 			p.buf.WriteRune('\n')
+		// 		case SCTE35Cue_Mid:
+		// 			p.buf.WriteString("#EXT-X-CUE-OUT-CONT:")
+		// 			p.buf.WriteString("ElapsedTime=")
+		// 			p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Elapsed, 'f', -1, 64))
+		// 			p.buf.WriteString(",Duration=")
+		// 			p.buf.WriteString(strconv.FormatFloat(seg.SCTE.Time, 'f', -1, 64))
+		// 			p.buf.WriteString(",SCTE35=")
+		// 			p.buf.WriteString(seg.SCTE.Cue)
+		// 			p.buf.WriteRune('\n')
+		// 		case SCTE35Cue_End:
+		// 			p.buf.WriteString("#EXT-X-CUE-IN")
+		// 			p.buf.WriteRune('\n')
+		// 		}
+		// 	}
+		// }
 		// check for key change
 		if seg.Key != nil && p.Key != seg.Key {
 			p.buf.WriteString("#EXT-X-KEY:")
@@ -644,6 +644,17 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 		}
 		if seg.Discontinuity {
 			p.buf.WriteString("#EXT-X-DISCONTINUITY\n")
+		}
+		if seg.CueTag.Cuetype != CueType_None {
+
+			if seg.CueTag.Cuetype == CueType_IN {
+				p.buf.WriteString("#EXT-X-CUE-IN\n")
+			}
+			if seg.CueTag.Cuetype == CueType_OUT {
+				p.buf.WriteString("#EXT-X-CUE-OUT:")
+				p.buf.WriteString("DURATION=")
+				p.buf.WriteString(fmt.Sprintf("%v\n", seg.CueTag.Duration))
+			}
 		}
 		// ignore segment Map if default playlist Map is present
 		if p.Map == nil && seg.Map != nil {
