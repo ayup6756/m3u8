@@ -734,31 +734,30 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 				state.scte.Elapsed, _ = strconv.ParseFloat(value, 64)
 			}
 		}
-	case !state.tagSCTE35 && strings.HasPrefix(line, "#EXT-X-CUE-OUT"):
-		state.tagSCTE35 = true
-		state.scte = new(SCTE)
-		state.scte.Syntax = SCTE35_OATCLS
-		state.scte.CueType = SCTE35Cue_Start
-		lenLine := len(line)
-		if lenLine > 14 {
-			state.scte.Time, _ = strconv.ParseFloat(line[15:], 64)
-		}
-	case !state.tagSCTE35 && line == "#EXT-X-CUE-IN":
-		state.tagSCTE35 = true
-		state.scte = new(SCTE)
-		state.scte.Syntax = SCTE35_OATCLS
-		state.scte.CueType = SCTE35Cue_End
+	// case !state.tagSCTE35 && strings.HasPrefix(line, "#EXT-X-CUE-OUT"):
+	// 	state.tagSCTE35 = true
+	// 	state.scte = new(SCTE)
+	// 	state.scte.Syntax = SCTE35_OATCLS
+	// 	state.scte.CueType = SCTE35Cue_Start
+	// 	lenLine := len(line)
+	// 	if lenLine > 14 {
+	// 		state.scte.Time, _ = strconv.ParseFloat(line[15:], 64)
+	// 	}
+	// case !state.tagSCTE35 && line == "#EXT-X-CUE-IN":
+	// 	state.tagSCTE35 = true
+	// 	state.scte = new(SCTE)
+	// 	state.scte.Syntax = SCTE35_OATCLS
+	// 	state.scte.CueType = SCTE35Cue_End
 	case !state.tagDiscontinuity && strings.HasPrefix(line, "#EXT-X-DISCONTINUITY"):
 		state.tagDiscontinuity = true
 		state.listType = MEDIA
 
-	case strings.HasPrefix(line, "#EXT-X-CUE-IN"):
+	case state.cuetag.Cuetype == 0 && strings.HasPrefix(line, "#EXT-X-CUE-IN"):
 		state.cuetag = CueTag{
 			Cuetype: CueType_IN,
 		}
-		fmt.Println(p.Segments[p.last()])
 
-	case strings.HasPrefix(line, "#EXT-X-CUE-OUT:"):
+	case state.cuetag.Cuetype == 0 && strings.HasPrefix(line, "#EXT-X-CUE-OUT:"):
 		tagname := "#EXT-X-CUE-OUT:"
 
 		for k, v := range DecodeAttributeList(line[len(tagname):]) {
