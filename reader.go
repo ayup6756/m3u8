@@ -587,28 +587,6 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 		if state.cuetag.Cuetype != 0 {
 			p.Segments[p.last()].CueTag = state.cuetag
 		}
-
-	case strings.HasPrefix(line, "#EXT-X-CUE-IN"):
-		state.cuetag = CueTag{
-			Cuetype: CueType_IN,
-		}
-
-	case strings.HasPrefix(line, "#EXT-X-CUE-OUT:"):
-		tagname := "#EXT-X-CUE-OUT:"
-
-		for k, v := range DecodeAttributeList(line[len(tagname):]) {
-			if k == "DURATION" {
-				duration, err := strconv.ParseFloat(v, 64)
-
-				if err != nil {
-					return err
-				}
-				state.cuetag = CueTag{
-					Cuetype:  CueType_OUT,
-					Duration: duration,
-				}
-			}
-		}
 	// start tag first
 	case line == "#EXTM3U":
 		state.m3u = true
@@ -773,6 +751,29 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 	case !state.tagDiscontinuity && strings.HasPrefix(line, "#EXT-X-DISCONTINUITY"):
 		state.tagDiscontinuity = true
 		state.listType = MEDIA
+
+	case strings.HasPrefix(line, "#EXT-X-CUE-IN"):
+		state.cuetag = CueTag{
+			Cuetype: CueType_IN,
+		}
+		fmt.Println(p.Segments[p.last()])
+
+	case strings.HasPrefix(line, "#EXT-X-CUE-OUT:"):
+		tagname := "#EXT-X-CUE-OUT:"
+
+		for k, v := range DecodeAttributeList(line[len(tagname):]) {
+			if k == "DURATION" {
+				duration, err := strconv.ParseFloat(v, 64)
+
+				if err != nil {
+					return err
+				}
+				state.cuetag = CueTag{
+					Cuetype:  CueType_OUT,
+					Duration: duration,
+				}
+			}
+		}
 	case strings.HasPrefix(line, "#EXT-X-I-FRAMES-ONLY"):
 		state.listType = MEDIA
 		p.Iframe = true
