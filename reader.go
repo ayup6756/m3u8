@@ -514,6 +514,22 @@ func decodeLineOfMediaPlaylist(p *MediaPlaylist, wv *WV, state *decodingState, l
 		if len(line) > sepIndex {
 			state.title = line[sepIndex+1:]
 		}
+	case strings.HasPrefix(line, "#EXT-X-CUE-IN"):
+		p.Segments[p.last()].CueTag = CueTag{
+			Cuetype: CueType_IN,
+		}
+
+	case strings.HasPrefix(line, "#EXT-X-CUE-OUT:"):
+		tagname := "#EXT-X-CUE-OUT:DURATION="
+		duration, err := strconv.ParseFloat(line[len(tagname):], 64)
+
+		if err != nil {
+			return err
+		}
+		p.Segments[p.last()].CueTag = CueTag{
+			Cuetype:  CueType_OUT,
+			Duration: duration,
+		}
 	case !strings.HasPrefix(line, "#"):
 		if state.tagInf {
 			err := p.Append(line, state.duration, state.title)

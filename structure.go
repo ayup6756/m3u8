@@ -78,6 +78,14 @@ const (
 	SCTE35Cue_End                        // SCTE35Cue_End indicates an in cue point
 )
 
+type CueType uint
+
+const (
+	CueType_None CueType = iota
+	CueType_OUT
+	CueType_IN
+)
+
 // MediaPlaylist structure represents a single bitrate playlist aka
 // media playlist. It related to both a simple media playlists and a
 // sliding window media playlists. URI lines in the Playlist point to
@@ -215,6 +223,7 @@ type MediaSegment struct {
 	Discontinuity   bool      // EXT-X-DISCONTINUITY indicates an encoding discontinuity between the media segment that follows it and the one that preceded it (i.e. file format, number and type of tracks, encoding parameters, encoding sequence, timestamp sequence)
 	SCTE            *SCTE     // SCTE-35 used for Ad signaling in HLS
 	ProgramDateTime time.Time // EXT-X-PROGRAM-DATE-TIME tag associates the first sample of a media segment with an absolute date and/or time
+	CueTag          CueTag
 	Custom          map[string]CustomTag
 }
 
@@ -308,6 +317,11 @@ type CustomTag interface {
 	String() string
 }
 
+type CueTag struct {
+	Cuetype  CueType
+	Duration float64
+}
+
 // Internal structure for decoding a line of input stream with a list type detection
 type decodingState struct {
 	listType           ListType
@@ -326,6 +340,7 @@ type decodingState struct {
 	limit              int64
 	offset             int64
 	duration           float64
+	cuetag             CueTag
 	title              string
 	variant            *Variant
 	alternatives       []*Alternative

@@ -645,6 +645,17 @@ func (p *MediaPlaylist) Encode() *bytes.Buffer {
 		if seg.Discontinuity {
 			p.buf.WriteString("#EXT-X-DISCONTINUITY\n")
 		}
+		if seg.CueTag.Cuetype != CueType_None {
+
+			if seg.CueTag.Cuetype == CueType_IN {
+				p.buf.WriteString("#EXT-X-CUE-IN\n")
+			}
+			if seg.CueTag.Cuetype == CueType_OUT {
+				p.buf.WriteString("#EXT-X-CUE-OUT:")
+				p.buf.WriteString("DURATION=")
+				p.buf.WriteString(fmt.Sprintf("%v\n", seg.CueTag.Duration))
+			}
+		}
 		// ignore segment Map if default playlist Map is present
 		if p.Map == nil && seg.Map != nil {
 			p.buf.WriteString("#EXT-X-MAP:")
